@@ -2,17 +2,34 @@ package in.ac.lnmiit.wimic;
 
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class MainActivity extends ActionBarActivity {
+
+    private List<String> rooms;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        RecyclerView recyclerView;
+        recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(linearLayoutManager);
+
+        this.createDummyData();
+        RVAdapter adapter = new RVAdapter(rooms);
+        recyclerView.setAdapter(adapter);
     }
 
 
@@ -37,5 +54,12 @@ public class MainActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void createDummyData() {
+        rooms = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            rooms.add("Room " + i);
+        }
     }
 }
