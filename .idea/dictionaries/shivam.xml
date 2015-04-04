@@ -2,6 +2,8 @@
   <dictionary name="shivam">
     <words>
       <w>addr</w>
+      <w>dhcp</w>
+      <w>wimic</w>
     </words>
   </dictionary>
 </component>
