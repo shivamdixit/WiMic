@@ -32,7 +32,7 @@
                 android:layout_alignParentTop="true"
                 android:textSize="30sp"
                 android:textColor="@color/room_name"
-                android:layout_marginTop="1.5dp" />
+                android:layout_marginTop="2dp" />
 
             <TextView
                 android:id="@+id/ip_addr"
