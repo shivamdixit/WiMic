@@ -90,7 +90,7 @@ public class MainActivity extends ActionBarActivity {
                         startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
                     }
                 })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                .setNegativeButton("Quit", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(final DialogInterface dialogInterface, final int i) {
                         finish();
