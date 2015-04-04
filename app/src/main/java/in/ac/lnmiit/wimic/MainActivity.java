@@ -1,5 +1,11 @@
 package in.ac.lnmiit.wimic;
 
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.wifi.WifiManager;
+import android.provider.Settings;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -7,6 +13,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View.OnClickListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +27,8 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        checkWifi();
 
         RecyclerView recyclerView;
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
@@ -61,5 +70,34 @@ public class MainActivity extends ActionBarActivity {
         for (int i = 0; i < 10; i++) {
             rooms.add(new Room("Room " + i, "192.168.1." + i + 1));
         }
+    }
+
+    private void checkWifi() {
+        WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+
+        if (!wifi.isWifiEnabled()) {
+            showWifiPrompt();
+        }
+    }
+
+    private void showWifiPrompt() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("WiMic")
+                .setCancelable(false)
+                .setMessage("The WiFi is not enabled. Do you want to turn it on?")
+                .setPositiveButton("Enable", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialogInterface, final int i) {
+                        startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialogInterface, final int i) {
+                        finish();
+                    }
+                })
+                .create()
+                .show();
     }
 }
