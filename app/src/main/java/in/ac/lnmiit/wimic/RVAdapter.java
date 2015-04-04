@@ -15,21 +15,23 @@ import java.util.List;
  */
 public class RVAdapter extends RecyclerView.Adapter<RVAdapter.RoomViewHolder> {
 
-    List<String> rooms;
+    List<Room> rooms;
 
-    RVAdapter(List<String> rooms) {
+    RVAdapter(List<Room> rooms) {
         this.rooms = rooms;
     }
 
     public static class RoomViewHolder extends RecyclerView.ViewHolder {
         CardView cv;
         TextView name;
+        TextView ip;
         ImageView mic;
 
         RoomViewHolder(View itemView) {
             super(itemView);
             cv = (CardView) itemView.findViewById(R.id.card_view);
             name = (TextView) itemView.findViewById(R.id.info_text);
+            ip = (TextView) itemView.findViewById(R.id.ip_addr);
             mic = (ImageView) itemView.findViewById(R.id.mic_photo);
         }
     }
@@ -48,7 +50,8 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.RoomViewHolder> {
 
     @Override
     public void onBindViewHolder(RoomViewHolder roomViewHolder, int i) {
-        roomViewHolder.name.setText(rooms.get(i));
+        roomViewHolder.name.setText(rooms.get(i).getName());
+        roomViewHolder.ip.setText(rooms.get(i).getIpAddress());
         roomViewHolder.mic.setImageResource(R.drawable.ic_action_mic);
     }
 

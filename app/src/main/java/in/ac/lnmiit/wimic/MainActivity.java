@@ -14,7 +14,7 @@ import java.util.List;
 
 public class MainActivity extends ActionBarActivity {
 
-    private List<String> rooms;
+    private List<Room> rooms;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,7 +59,7 @@ public class MainActivity extends ActionBarActivity {
     private void createDummyData() {
         rooms = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
-            rooms.add("Room " + i);
+            rooms.add(new Room("Room " + i, "192.168.1." + i + 1));
         }
     }
 }
