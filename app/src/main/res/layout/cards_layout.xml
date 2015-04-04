@@ -32,7 +32,8 @@
                 android:layout_toRightOf="@+id/mic_photo"
                 android:layout_toEndOf="@+id/mic_photo"
                 android:layout_alignParentTop="true"
-                android:textSize="30sp" />
+                android:textSize="30sp"
+                android:textColor="@color/room_name" />
 
             <TextView
                 android:id="@+id/ip_addr"
