@@ -4,7 +4,9 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.DhcpInfo;
 import android.net.wifi.WifiManager;
+import android.os.StrictMode;
 import android.provider.Settings;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -14,6 +16,10 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,9 +27,18 @@ import java.util.List;
 public class MainActivity extends ActionBarActivity {
 
     private List<Room> rooms;
+    private WifiManager wifi;
+
+    private final int PORT = 9876;
+
+    private final String DISC_MESSAGE = "WIMIC_DISCOVER_REQ";
+    private final String ACK_MESSAGE = "WIMIC_DISCOVER_ACK";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Initialize WiFi Manager for later use
+        wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -72,10 +87,16 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void checkWifi() {
-        WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-
         if (!wifi.isWifiEnabled()) {
+            System.out.println("WiFI is disabled");
             showWifiPrompt();
+        } else {
+            try {
+                System.out.println("WiFI is enabled");
+                sendBroadcastPackets();
+            } catch (Exception e) {
+                System.out.println("Caught Exception!");
+            }
         }
     }
 
@@ -98,5 +119,60 @@ public class MainActivity extends ActionBarActivity {
                 })
                 .create()
                 .show();
+    }
+
+    InetAddress getBroadcastAddress() throws IOException {
+        DhcpInfo dhcpInfo = wifi.getDhcpInfo();
+        if (dhcpInfo == null) {
+            throw new IOException("Cannot get DHCP information");
+        }
+
+        int broadcast = (dhcpInfo.ipAddress & dhcpInfo.netmask) | ~dhcpInfo.netmask;
+        byte[] quads = new byte[4];
+        for (int k = 0; k < 4; k++) {
+            quads[k] = (byte) ((broadcast >> k * 8) & 0xFF);
+        }
+
+        return InetAddress.getByAddress(quads);
+    }
+
+    private void sendBroadcastPackets() {
+        // TODO: Move this method in different class and run it in a different thread
+        // WARNING: BAD CODE!
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+
+        try {
+            DatagramSocket socket = new DatagramSocket(PORT);
+            socket.setBroadcast(true);
+
+            byte[] sendData = DISC_MESSAGE.getBytes();
+            DatagramPacket packet = new DatagramPacket(
+                    sendData,
+                    sendData.length,
+                    getBroadcastAddress(),
+                    PORT
+            );
+
+            socket.send(packet);
+            System.out.println("Sent discovery packets");
+
+            byte[] buffer = new byte[15000];
+            DatagramPacket receivePacket = new DatagramPacket(buffer, buffer.length);
+
+            while (true) {
+                socket.receive(receivePacket);
+
+                String message = new String(receivePacket.getData()).trim();
+                if (message.equals(ACK_MESSAGE)) {
+                    System.out.println("Server discovered: " + receivePacket.getAddress());
+                }
+            }
+
+        } catch (Exception e) {
+            // TODO
+            System.out.println(e);
+        }
+
     }
 }
