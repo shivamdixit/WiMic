@@ -18,21 +18,49 @@ import java.net.InetAddress;
 
 public class Speak extends ActionBarActivity {
 
-    private AudioRecord recorder;
+    /**
+     * Port to send data
+     */
     private int speakPort = 9898;    // SPEAK_PORT on server
 
+    /**
+     * Audio config
+     */
+    private AudioRecord recorder;
     private int sampleRate = 16000;
     private int channelConfig = AudioFormat.CHANNEL_IN_MONO;
     private int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
+
+    /**
+     * Initialize minimum buffer
+     */
     int minBufSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat);
 
+    /**
+     * IP Address of destination host
+     */
     private InetAddress destination;
+
+    /**
+     * Localhost IP Address
+     */
     private String LOCALHOST = "0.0.0.0";
 
+    /**
+     * Flag to test if button is pressed
+     */
     private boolean buttonPressed = false;
 
+    /**
+     * Holds the socket object
+     */
     private DatagramSocket socket;
 
+    /**
+     * Entry point of the activity. Initializes required objects.
+     *
+     * @param savedInstanceState Instance state
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,6 +85,9 @@ public class Speak extends ActionBarActivity {
         }
     }
 
+    /**
+     * Initialize touch listener on speak button
+     */
     private void addTouchListener() {
         Button startButton = (Button) findViewById(R.id.speak_button);
         startButton.setOnTouchListener(new View.OnTouchListener(){
@@ -80,6 +111,9 @@ public class Speak extends ActionBarActivity {
         });
     }
 
+    /**
+     * Transmit voice to server through UDP
+     */
     public void startStreaming() {
         new Thread(new Runnable() {
             @Override
@@ -108,6 +142,12 @@ public class Speak extends ActionBarActivity {
         }).start();
     }
 
+    /**
+     * Auto-generated method
+     *
+     * @param menu Menu
+     * @return boolean
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -115,6 +155,12 @@ public class Speak extends ActionBarActivity {
         return true;
     }
 
+    /**
+     * Auto-generated method
+     *
+     * @param item Item
+     * @return boolean
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
