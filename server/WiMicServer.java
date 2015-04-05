@@ -1,9 +1,18 @@
 import java.io.IOException;
+import java.io.ByteArrayInputStream;
 import java.lang.System;
 import java.net.InetAddress;
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 import java.util.Scanner;
+
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.FloatControl;
+import javax.sound.sampled.SourceDataLine;
+
 
 /**
  * class WiMicServer
@@ -32,6 +41,19 @@ public class WiMicServer implements Runnable {
      */
     private int pin;
 
+
+    /**
+     * Variables used for transmitting voice
+     */
+    AudioInputStream audioInputStream;
+    static AudioInputStream ais;
+    static AudioFormat format;
+    static boolean status = true;
+    static int sampleRate = 16000;
+    static DataLine.Info dataLineInfo;
+    static SourceDataLine sourceDataLine;
+    static int SPEAK_PORT = 9898;
+
     /**
      * Constructor
      *
@@ -53,8 +75,10 @@ public class WiMicServer implements Runnable {
             socket.setBroadcast(true);
             System.out.println(name + " is ready. Your pin is: " + pin);
 
+            receiveVoicePackets();
+
             while (true) {
-                receivePackets(socket);
+                receiveOtherPackets(socket);
             }
         } catch (Exception e) {
             // TODO
@@ -63,12 +87,12 @@ public class WiMicServer implements Runnable {
     }
 
     /**
-     * Receive packets from clients
+     * Receive packets from clients (other than voice)
      *
      * @param socket DatagramSocket object which is binded to port
      * @throws IOException if cannot receive packets
      */
-    private void receivePackets(DatagramSocket socket) throws IOException {
+    private void receiveOtherPackets(DatagramSocket socket) throws IOException {
         byte[] receiveBuffer = new byte[15000];
         DatagramPacket packet = new DatagramPacket(
                 receiveBuffer,
@@ -96,7 +120,7 @@ public class WiMicServer implements Runnable {
             sendDiscoveryAck(socket, packet);
 
         } else if (message.contains(JOIN_MESSAGE)) {
-            System.out.println("Join packet received from" + packet.getAddress());
+            System.out.println("Join packet received from " + packet.getAddress());
             sendJoinACK(socket, packet);
         }
     }
@@ -170,6 +194,55 @@ public class WiMicServer implements Runnable {
         }
 
         return false;
+    }
+
+    private void receiveVoicePackets() {
+        new Thread(new Runnable() {
+            public void run() {
+                try {
+                    DatagramSocket voiceSocket = new DatagramSocket(SPEAK_PORT, InetAddress.getByName(LOCALHOST));
+                    byte[] receiveData = new byte[3800];
+
+                    format = new AudioFormat(sampleRate, 16, 1, true, false);
+                    dataLineInfo = new DataLine.Info(SourceDataLine.class, format);
+                    sourceDataLine = (SourceDataLine) AudioSystem.getLine(dataLineInfo);
+                    sourceDataLine.open(format);
+                    sourceDataLine.start();
+
+                    FloatControl volumeControl = (FloatControl) sourceDataLine.getControl(FloatControl.Type.MASTER_GAIN);
+                    volumeControl.setValue(1.00f);
+
+                    DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                    ByteArrayInputStream baiss = new ByteArrayInputStream(receivePacket.getData());
+
+                    while (status == true) {
+                        voiceSocket.receive(receivePacket);
+                        ais = new AudioInputStream(baiss, format, receivePacket.getLength());
+                        toSpeaker(receivePacket.getData());
+                    }
+
+                    sourceDataLine.drain();
+                    sourceDataLine.close();
+                } catch (Exception e) {
+                    System.out.println("Exception!");
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    /**
+     * Transmits data to speakers
+     *
+     * @param soundBytes bytes to write to speakers
+     */
+    public static void toSpeaker(byte[] soundBytes) {
+        try {
+            sourceDataLine.write(soundBytes, 0, soundBytes.length);
+        } catch (Exception e) {
+            System.out.println("Cannot send data to speakers");
+            e.printStackTrace();
+        }
     }
 
     /**
