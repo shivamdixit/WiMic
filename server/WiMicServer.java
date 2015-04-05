@@ -200,17 +200,12 @@ public class WiMicServer implements Runnable {
         new Thread(new Runnable() {
             public void run() {
                 try {
-                    DatagramSocket voiceSocket = new DatagramSocket(SPEAK_PORT, InetAddress.getByName(LOCALHOST));
+                    DatagramSocket voiceSocket = new DatagramSocket(
+                        SPEAK_PORT,
+                        InetAddress.getByName(LOCALHOST)
+                    );
                     byte[] receiveData = new byte[3800];
-
-                    format = new AudioFormat(sampleRate, 16, 1, true, false);
-                    dataLineInfo = new DataLine.Info(SourceDataLine.class, format);
-                    sourceDataLine = (SourceDataLine) AudioSystem.getLine(dataLineInfo);
-                    sourceDataLine.open(format);
-                    sourceDataLine.start();
-
-                    FloatControl volumeControl = (FloatControl) sourceDataLine.getControl(FloatControl.Type.MASTER_GAIN);
-                    volumeControl.setValue(1.00f);
+                    initialize();
 
                     DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                     ByteArrayInputStream baiss = new ByteArrayInputStream(receivePacket.getData());
@@ -229,6 +224,20 @@ public class WiMicServer implements Runnable {
                 }
             }
         }).start();
+    }
+
+    /**
+     * Initializes audio
+     */
+    public static void initialize() throws Exception {
+        format = new AudioFormat(sampleRate, 16, 1, true, false);
+        dataLineInfo = new DataLine.Info(SourceDataLine.class, format);
+        sourceDataLine = (SourceDataLine) AudioSystem.getLine(dataLineInfo);
+        sourceDataLine.open(format);
+        sourceDataLine.start();
+
+        FloatControl volumeControl = (FloatControl) sourceDataLine.getControl(FloatControl.Type.MASTER_GAIN);
+        volumeControl.setValue(1.00f);
     }
 
     /**
