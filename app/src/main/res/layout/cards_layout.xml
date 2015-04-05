@@ -7,8 +7,11 @@
         android:id="@+id/card_view"
         android:layout_width="match_parent"
         android:layout_height="100dp"
-        card_view:cardCornerRadius="2dp"
-        card_view:cardElevation="4dp" >
+        card_view:cardCornerRadius="6dp"
+        card_view:cardElevation="4dp"
+        android:foreground="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:onClick="onClick" >
 
         <RelativeLayout
             android:layout_width="match_parent"

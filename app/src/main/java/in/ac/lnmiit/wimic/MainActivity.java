@@ -1,6 +1,8 @@
 package in.ac.lnmiit.wimic;
 
+import android.app.ActionBar;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -11,11 +13,17 @@ import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.InputType;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.TextView;
 
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -127,22 +135,22 @@ public class MainActivity extends ActionBarActivity {
     private void showWifiPrompt() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("WiMic")
-                .setCancelable(false)
-                .setMessage("The WiFi is not enabled. Do you want to turn it on?")
-                .setPositiveButton("Enable", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(final DialogInterface dialogInterface, final int i) {
-                        startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
-                    }
-                })
-                .setNegativeButton("Quit", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(final DialogInterface dialogInterface, final int i) {
-                        finish();
-                    }
-                })
-                .create()
-                .show();
+            .setCancelable(false)
+            .setMessage("The WiFi is not enabled. Do you want to turn it on?")
+            .setPositiveButton("Enable", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(final DialogInterface dialogInterface, final int i) {
+                    startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
+                }
+            })
+            .setNegativeButton("Quit", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(final DialogInterface dialogInterface, final int i) {
+                    finish();
+                }
+            })
+            .create()
+            .show();
     }
 
     /**
@@ -174,5 +182,120 @@ public class MainActivity extends ActionBarActivity {
     private void sendBroadcastPackets() throws IOException {
         // Start a new Async Task
         new Network(recyclerView).execute(getBroadcastAddress());
+    }
+
+    /**
+     * Prompts user for PIN when he/she clicks on room
+     *
+     * @param v View clicked
+     */
+    public void onClick(View v) {
+        final TextView addressView = (TextView) v.findViewById(R.id.ip_addr);
+
+        final EditText passField = new EditText(this);
+        passField.setInputType(InputType.TYPE_CLASS_NUMBER);
+        passField.setLayoutParams(new ActionBar.LayoutParams(50, 50));
+
+        // Prompt user for password
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Enter PIN")
+            .setCancelable(false)
+            .setView(passField)
+            .setPositiveButton("Join", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(final DialogInterface dialogInterface, final int i) {
+                    ProgressDialog dialog = ProgressDialog.show(
+                            MainActivity.this,
+                            "Loading",
+                            "Please wait...",
+                            true
+                    );
+
+                    String password = passField.getText().toString();
+                    String ipAddress = addressView.getText().toString(); // Ex "/192.168.xxx.xxx"
+
+                    // Strip the '/' if present
+                    if (ipAddress.charAt(0) == '/') {
+                        ipAddress = ipAddress.substring(1);
+                    }
+
+                    joinRoom(ipAddress, password, dialog);
+                }
+            })
+            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(final DialogInterface dialogInterface, final int i) {
+                    // Do nothing
+                }
+            })
+            .create()
+            .show();
+
+    }
+
+    /**
+     * Validates PIN and open next activity
+     *
+     * @param ipAddress Receiver's IP
+     * @param pin Pin entered by user
+     * @param dialog ProgressDialog
+     */
+    private void joinRoom(final String ipAddress, final String pin, final ProgressDialog dialog) {
+        // TODO: Move it to new Async class
+        final String JOIN_MESSAGE = "WIMIC_JOIN_PASSWORD";
+        final String JOIN_SUCCESS = "WIMIC_JOIN_SUCCESS";
+        final String JOIN_FAIL = "WIMIC_JOIN_FAILURE";
+        final int PORT_BIND = 9877;  // USE DIFFERENT PORT AS 9876 IS ALREADY IN USE
+        final int PORT_SEND = 9876;
+        final String LOCALHOST = "0.0.0.0";
+
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    DatagramSocket socket = new DatagramSocket(PORT_BIND, InetAddress.getByName(LOCALHOST));
+                    byte[] sendData = (JOIN_MESSAGE + ";" + pin).getBytes();
+
+                    System.out.println(InetAddress.getByName(ipAddress));
+
+                    DatagramPacket sendPacket = new DatagramPacket(
+                            sendData,
+                            sendData.length,
+                            InetAddress.getByName(ipAddress),
+                            PORT_SEND
+                    );
+
+                    socket.send(sendPacket);
+
+                    // Receive the response
+                    byte[] receiveBuffer = new byte[15000];
+                    DatagramPacket packet = new DatagramPacket(
+                            receiveBuffer,
+                            receiveBuffer.length
+                    );
+
+                    socket.receive(packet);
+                    String message = new String(packet.getData()).trim();
+
+                    if (message.equals(JOIN_SUCCESS)) {
+                        System.out.println("SUCCESS");
+
+                        Intent myIntent = new Intent(MainActivity.this, Speak.class);
+                        MainActivity.this.startActivity(myIntent);
+                    } else if (message.equals(JOIN_FAIL)) {
+                        // TODO
+                        System.out.println("Wrong PIN entered");
+                    }
+
+                    dialog.dismiss();
+                    socket.close();
+                } catch (Exception e) {
+                    // TODO
+                    System.out.println(e);
+                    dialog.dismiss();
+                }
+            }
+        }).start();
     }
 }
