@@ -11,16 +11,27 @@ import android.widget.TextView;
 import java.util.List;
 
 /**
- * @author Shivam Dixit <shivamd001 at gmail.com>
+ * Adapter class of RecyclerView
  */
 public class RVAdapter extends RecyclerView.Adapter<RVAdapter.RoomViewHolder> {
 
+    /**
+     * List of rooms that are to be populated
+     */
     List<Room> rooms;
 
+    /**
+     * Constructor
+     *
+     * @param rooms List of rooms
+     */
     RVAdapter(List<Room> rooms) {
         this.rooms = rooms;
     }
 
+    /**
+     * Creates view holder
+     */
     public static class RoomViewHolder extends RecyclerView.ViewHolder {
         CardView cv;
         TextView name;
@@ -36,11 +47,23 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.RoomViewHolder> {
         }
     }
 
+    /**
+     * Get number of rooms
+     *
+     * @return the number of rooms in List<rooms>
+     */
     @Override
     public int getItemCount() {
         return rooms.size();
     }
 
+    /**
+     * Inflate the layout
+     *
+     * @param viewGroup Object
+     * @param i Index
+     * @return RoomViewHolder
+     */
     @Override
     public RoomViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
         View v = LayoutInflater.from(viewGroup.getContext())
@@ -48,6 +71,12 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.RoomViewHolder> {
         return new RoomViewHolder(v);
     }
 
+    /**
+     * Sets the content of roomViewHolder
+     *
+     * @param roomViewHolder Object
+     * @param i Index
+     */
     @Override
     public void onBindViewHolder(RoomViewHolder roomViewHolder, int i) {
         roomViewHolder.name.setText(rooms.get(i).getName());
@@ -55,6 +84,11 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.RoomViewHolder> {
         roomViewHolder.mic.setImageResource(R.drawable.ic_action_mic);
     }
 
+    /**
+     * Attach to RecyclerView
+     *
+     * @param recyclerView RecyclerView object
+     */
     @Override
     public void onAttachedToRecyclerView(RecyclerView recyclerView) {
         super.onAttachedToRecyclerView(recyclerView);

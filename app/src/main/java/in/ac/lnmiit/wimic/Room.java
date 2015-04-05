@@ -1,18 +1,36 @@
 package in.ac.lnmiit.wimic;
 
 /**
- * @author Shivam Dixit <shivamd001 at gmail.com>
+ * class Room
+ *
+ * Represents a server
  */
 public class Room {
 
+    /**
+     * Name of the room
+     */
     private String name;
+
+    /**
+     * IP Address of the room
+     */
     private String ipAddress;
 
+    /**
+     * Constructor
+     *
+     * @param name Name of the room
+     * @param ipAddress IP address of the room
+     */
     Room(String name, String ipAddress) {
         this.name = name;
         this.ipAddress = ipAddress;
     }
 
+    /**
+     * Getters and setters
+     */
     public String getName() {
         return name;
     }

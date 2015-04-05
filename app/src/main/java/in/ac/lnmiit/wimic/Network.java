@@ -9,31 +9,59 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * class Network
+ *
+ * Responsible for server discovery
+ */
 public class Network extends AsyncTask<InetAddress, Room, List<Room>> {
 
+    /**
+     * Port to bind on
+     */
     private final int PORT = 9876;
+
+    /**
+     * Time duration for which scan rooms available
+     */
     private final int timeout = 60;     // In seconds, i.e 1 min
 
     /**
-     * Message format
-     *
+     * Message format:
+     * From server->
      * ACK_MESSAGE;serverName
+     *
+     * From client->
      * DISC_MESSAGE
      */
     private final String DISC_MESSAGE = "WIMIC_DISCOVER_REQ";
     private final String ACK_MESSAGE = "WIMIC_DISCOVER_ACK";
 
     /**
-     * Create a list of rooms to cache
+     * Create a list of rooms to cache for later use
      */
     private List<Room> rooms = new ArrayList<>();
 
+    /**
+     * To update the view
+     */
     private RecyclerView recyclerView;
 
+    /**
+     * Constructor
+     *
+     * @param recyclerView RecyclerView object
+     */
     Network(RecyclerView recyclerView) {
         this.recyclerView = recyclerView;
     }
 
+    /**
+     * Sends discovery message and wait for responses till 'timeout' period
+     *
+     * @param ip Ip Address
+     * @return List of rooms
+     */
     @Override
     protected List<Room> doInBackground(InetAddress... ip) {
         try {
@@ -81,6 +109,11 @@ public class Network extends AsyncTask<InetAddress, Room, List<Room>> {
         return rooms;
     }
 
+    /**
+     * When a room is discovered update the view
+     *
+     * @param progress Room object
+     */
     @Override
     protected void onProgressUpdate(Room... progress) {
         // TODO: Currently every card is redrawn each time a room is found
@@ -93,6 +126,12 @@ public class Network extends AsyncTask<InetAddress, Room, List<Room>> {
         }
     }
 
+    /**
+     * When rooms discovery is finished, cache the rooms
+     *
+     * @param rooms List of rooms discovered
+     */
+    @Override
     protected void onPostExecute(List<Room> rooms) {
         // TODO Add caching of rooms
     }

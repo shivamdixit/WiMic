@@ -27,10 +27,22 @@ import java.util.List;
  */
 public class MainActivity extends ActionBarActivity {
 
+    /**
+     * Stores WiFi system service object
+     */
     private WifiManager wifi;
 
+    /**
+     * Stores RecyclerView object for list population
+     */
     protected RecyclerView recyclerView;
 
+    /**
+     * Entry point of the application. Draws the UI and initiate
+     * server discovery
+     *
+     * @param savedInstanceState Instance State
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Initialize WiFi Manager for later use
@@ -42,6 +54,7 @@ public class MainActivity extends ActionBarActivity {
         // Will work only after setting contentView
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
 
+        // Set layout of recyclerView
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(linearLayoutManager);
 
@@ -55,6 +68,11 @@ public class MainActivity extends ActionBarActivity {
     }
 
 
+    /**
+     * Creates ActionBar
+     *
+     * @param menu Menu
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -63,6 +81,11 @@ public class MainActivity extends ActionBarActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
+    /**
+     * Auto-generated method
+     *
+     * @param item Item
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -78,6 +101,12 @@ public class MainActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * Checks if WiFi is enabled.
+     *
+     * If enabled, search for available servers else prompt
+     * user to enable WiFi
+     */
     private void checkWifi() {
         if (!wifi.isWifiEnabled()) {
             System.out.println("WiFI is disabled");
@@ -92,6 +121,9 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
+    /**
+     * Displays the WiFi prompt to enable WiFi
+     */
     private void showWifiPrompt() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("WiMic")
@@ -113,6 +145,12 @@ public class MainActivity extends ActionBarActivity {
                 .show();
     }
 
+    /**
+     * Generates broadcast address from DHCP info of Wifi
+     *
+     * @return the broadcast address of the network
+     * @throws IOException if it is not able to get DHCP info
+     */
     InetAddress getBroadcastAddress() throws IOException {
         DhcpInfo dhcpInfo = wifi.getDhcpInfo();
         if (dhcpInfo == null) {
@@ -128,6 +166,11 @@ public class MainActivity extends ActionBarActivity {
         return InetAddress.getByAddress(quads);
     }
 
+    /**
+     * Sends broadcast message on given broadcast address
+     *
+     * @throws IOException if it is not able to send packets
+     */
     private void sendBroadcastPackets() throws IOException {
         // Start a new Async Task
         new Network(recyclerView).execute(getBroadcastAddress());
