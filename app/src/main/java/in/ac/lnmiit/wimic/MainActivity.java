@@ -102,10 +102,10 @@ public class MainActivity extends ActionBarActivity {
     }
 
     /**
-     * Checks if WiFi is enabled.
+     * Checks if WiFi is enabled or not.
      *
      * If enabled, search for available servers else prompt
-     * user to enable WiFi
+     * user to enable it.
      */
     private void checkWifi() {
         if (!wifi.isWifiEnabled()) {
