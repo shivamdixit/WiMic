@@ -241,7 +241,7 @@ public class MainActivity extends ActionBarActivity {
      * @param dialog ProgressDialog
      */
     private void joinRoom(final String ipAddress, final String pin, final ProgressDialog dialog) {
-        // TODO: Move it to new Async class
+        // TODO: Move it to a new Async class
         final String JOIN_MESSAGE = "WIMIC_JOIN_PASSWORD";
         final String JOIN_SUCCESS = "WIMIC_JOIN_SUCCESS";
         final String JOIN_FAIL = "WIMIC_JOIN_FAILURE";
@@ -292,7 +292,7 @@ public class MainActivity extends ActionBarActivity {
                     socket.close();
                 } catch (Exception e) {
                     // TODO
-                    System.out.println(e);
+                    e.printStackTrace();
                     dialog.dismiss();
                 }
             }
