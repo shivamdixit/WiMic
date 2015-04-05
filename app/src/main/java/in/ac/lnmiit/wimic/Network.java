@@ -1,6 +1,7 @@
 package in.ac.lnmiit.wimic;
 
 import android.os.AsyncTask;
+import android.support.v7.widget.RecyclerView;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -25,12 +26,16 @@ public class Network extends AsyncTask<InetAddress, Room, List<Room>> {
     /**
      * Create a list of rooms to cache
      */
-    private List<Room> rooms;
+    private List<Room> rooms = new ArrayList<>();
+
+    private RecyclerView recyclerView;
+
+    Network(RecyclerView recyclerView) {
+        this.recyclerView = recyclerView;
+    }
 
     @Override
     protected List<Room> doInBackground(InetAddress... ip) {
-        rooms = new ArrayList<>();
-
         try {
             DatagramSocket socket = new DatagramSocket(PORT);
             socket.setBroadcast(true);
@@ -60,9 +65,9 @@ public class Network extends AsyncTask<InetAddress, Room, List<Room>> {
                 if (message.contains(ACK_MESSAGE)) {
                     serverDetails = message.split(";");
                     Room newRoom = new Room(serverDetails[1], receivePacket.getAddress().toString());
-                    publishProgress(newRoom);
-
                     rooms.add(newRoom);
+
+                    publishProgress(newRoom);
                 }
             }
 
@@ -78,11 +83,17 @@ public class Network extends AsyncTask<InetAddress, Room, List<Room>> {
 
     @Override
     protected void onProgressUpdate(Room... progress) {
-        // TODO
+        // TODO: Currently every card is redrawn each time a room is found
+        // modify code to draw only new card found
         System.out.println("Server Discovered " + progress[0].getName());
+
+        if (!rooms.isEmpty()) {
+            RVAdapter adapter = new RVAdapter(rooms);
+            recyclerView.setAdapter(adapter);
+        }
     }
 
     protected void onPostExecute(List<Room> rooms) {
-        // TODO
+        // TODO Add caching of rooms
     }
 }

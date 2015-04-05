@@ -27,8 +27,9 @@ import java.util.List;
  */
 public class MainActivity extends ActionBarActivity {
 
-    private List<Room> rooms;
     private WifiManager wifi;
+
+    protected RecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,17 +39,19 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        checkWifi();
-
-        RecyclerView recyclerView;
+        // Will work only after setting contentView
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(linearLayoutManager);
 
-        this.createDummyData();
+        // TODO: Can be improved
+        // Initialize empty adapter
+        List<Room> rooms = new ArrayList<>();
         RVAdapter adapter = new RVAdapter(rooms);
         recyclerView.setAdapter(adapter);
+
+        checkWifi();
     }
 
 
@@ -73,13 +76,6 @@ public class MainActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    private void createDummyData() {
-        rooms = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
-            rooms.add(new Room("Room " + i, "192.168.1." + i + 1));
-        }
     }
 
     private void checkWifi() {
@@ -134,6 +130,6 @@ public class MainActivity extends ActionBarActivity {
 
     private void sendBroadcastPackets() throws IOException {
         // Start a new Async Task
-        new Network().execute(getBroadcastAddress());
+        new Network(recyclerView).execute(getBroadcastAddress());
     }
 }
