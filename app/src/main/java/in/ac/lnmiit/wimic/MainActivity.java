@@ -282,6 +282,7 @@ public class MainActivity extends ActionBarActivity {
                         System.out.println("SUCCESS");
 
                         Intent myIntent = new Intent(MainActivity.this, Speak.class);
+                        myIntent.putExtra("ipAddress", ipAddress);
                         MainActivity.this.startActivity(myIntent);
                     } else if (message.equals(JOIN_FAIL)) {
                         // TODO

@@ -2,4 +2,7 @@
 <resources>
     <color name="ip_addr">#8A000000</color>
     <color name="room_name">#8A000000</color>
+    <color name="speak_back">#7E57C2</color>
+    <color name="speak_btn">#FF80AB</color>
+    <color name="txt">#ffffff</color>
 </resources>
