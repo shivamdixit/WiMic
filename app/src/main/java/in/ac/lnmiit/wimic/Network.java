@@ -3,6 +3,7 @@ package in.ac.lnmiit.wimic;
 import android.os.AsyncTask;
 import android.support.v7.widget.RecyclerView;
 
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -79,25 +80,8 @@ public class Network extends AsyncTask<InetAddress, Room, List<Room>> {
             socket.send(packet);
             System.out.println("Sent discovery packets");
 
-            byte[] buffer = new byte[15000];
-            DatagramPacket receivePacket = new DatagramPacket(buffer, buffer.length);
-
-            // Discover server only for 1 minute.
-            long startTime = System.currentTimeMillis();
-            while ((System.currentTimeMillis() - startTime) < timeout * 1000) {
-                socket.receive(receivePacket);
-
-                String message = new String(receivePacket.getData()).trim();
-                String[] serverDetails;
-
-                if (message.contains(ACK_MESSAGE)) {
-                    serverDetails = message.split(";");
-                    Room newRoom = new Room(serverDetails[1], receivePacket.getAddress().toString());
-                    rooms.add(newRoom);
-
-                    publishProgress(newRoom);
-                }
-            }
+            // Wait and fetch ACKs from server
+            waitForResponse(socket);
 
             // Close the socket
             socket.close();
@@ -107,6 +91,34 @@ public class Network extends AsyncTask<InetAddress, Room, List<Room>> {
         }
 
         return rooms;
+    }
+
+    /**
+     * Fetches ACK of discovery packets and publishes progress
+     *
+     * @param socket Socket to listen on
+     * @throws IOException if cannot receive packets
+     */
+    private void waitForResponse(DatagramSocket socket) throws IOException {
+        byte[] buffer = new byte[15000];
+        DatagramPacket receivePacket = new DatagramPacket(buffer, buffer.length);
+
+        // Discover server only for 'timeout' seconds.
+        long startTime = System.currentTimeMillis();
+        while ((System.currentTimeMillis() - startTime) < timeout * 1000) {
+            socket.receive(receivePacket);
+
+            String message = new String(receivePacket.getData()).trim();
+            String[] serverDetails;
+
+            if (message.contains(ACK_MESSAGE)) {
+                serverDetails = message.split(";");
+                Room newRoom = new Room(serverDetails[1], receivePacket.getAddress().toString());
+                rooms.add(newRoom);
+
+                publishProgress(newRoom);
+            }
+        }
     }
 
     /**
