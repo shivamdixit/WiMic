@@ -20,12 +20,15 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
-
+/**
+ * class MainActivity
+ *
+ * Main activity of the app. Controls the UI as well as other events
+ */
 public class MainActivity extends ActionBarActivity {
 
     private List<Room> rooms;
     private WifiManager wifi;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

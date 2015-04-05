@@ -14,7 +14,8 @@ public class WiMicServer implements Runnable {
     private String name = "WiMic Server";
 
     WiMicServer(String name) {
-        this.name = name;
+        // Ensure first alphabet is capital
+        this.name = name.substring(0, 1).toUpperCase() + name.substring(1);
     }
 
     public void run() {
