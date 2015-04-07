@@ -5,6 +5,8 @@ import java.net.InetAddress;
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -30,6 +32,11 @@ public class WiMicServer implements Runnable {
     private final String JOIN_MESSAGE = "WIMIC_JOIN_PASSWORD";
     private final String JOIN_SUCCESS = "WIMIC_JOIN_SUCCESS";
     private final String JOIN_FAIL = "WIMIC_JOIN_FAILURE";
+    private final String SPEAK_MESSAGE = "WIMIC_SPEAK_REQ";
+    private final String STOP_SPEAK_MESSAGE = "WIMIC_SPEAK_END";
+    private final String SPEAK_ACK = "WIMIC_SPEAK_ACK";
+    private final String SPEAK_NACK = "WIMIC_SPEAK_NACK";
+    private final String SPEAK_TIMEOUT = "WIMIC_SPEAK_TIMEOUT";
 
     /**
      * Room name
@@ -41,6 +48,17 @@ public class WiMicServer implements Runnable {
      */
     private int pin;
 
+    /**
+     * Channel availibity flag
+     */
+    private boolean isChannelAvailable = true;
+
+    /**
+     * Time per request in ms
+     */
+    private int timeout = 60 * 1000;
+
+    private Timer timer;
 
     /**
      * Variables used for transmitting voice
@@ -53,6 +71,7 @@ public class WiMicServer implements Runnable {
     static DataLine.Info dataLineInfo;
     static SourceDataLine sourceDataLine;
     static int SPEAK_PORT = 9898;
+    private DatagramSocket voiceSocket;
 
     /**
      * Constructor
@@ -76,7 +95,6 @@ public class WiMicServer implements Runnable {
             System.out.println(name + " is ready. Your pin is: " + pin);
 
             receiveVoicePackets();
-
             while (true) {
                 receiveOtherPackets(socket);
             }
@@ -122,6 +140,16 @@ public class WiMicServer implements Runnable {
         } else if (message.contains(JOIN_MESSAGE)) {
             System.out.println("Join packet received from " + packet.getAddress());
             sendJoinACK(socket, packet);
+        } else if (message.equals(SPEAK_MESSAGE)) {
+            System.out.println("Speak message received");
+            sendSpeakACK(socket, packet);
+        } else if (message.equals(STOP_SPEAK_MESSAGE)) {
+            System.out.println("Stop speak message received");
+            isChannelAvailable = true;
+
+            // Cancel the timer
+            timer.cancel();
+            timer.purge();
         }
     }
 
@@ -175,6 +203,47 @@ public class WiMicServer implements Runnable {
         socket.send(sendPacket);
     }
 
+    private void sendSpeakACK(DatagramSocket socket, DatagramPacket packet) throws IOException {
+        if (isChannelAvailable) {
+            isChannelAvailable = false;
+            setTimeout();  // Inform client after timeout
+            System.out.println("Sending ACK of channel available");
+            sendMessage(socket, packet, SPEAK_ACK);
+        } else {
+            System.out.println("Sending NACK of channel available");
+            sendMessage(socket, packet, SPEAK_NACK);
+        }
+    }
+
+    private void sendMessage(
+        DatagramSocket socket,
+        DatagramPacket packet,
+        String message
+    ) throws IOException {
+
+        byte[] sendData = message.getBytes();
+        DatagramPacket sendPacket = new DatagramPacket(
+                sendData,
+                sendData.length,
+                packet.getAddress(),
+                packet.getPort()
+        );
+
+        socket.send(sendPacket);
+    }
+
+    private void setTimeout() {
+        timer = new Timer();
+        timer.schedule(new TimerTask(){
+            @Override
+            public void run() {
+                System.out.println("Timeout has occurred");
+                isChannelAvailable = true;  // Assuming client respects our requests
+            }
+
+        }, timeout);
+    }
+
     /**
      * Checks if a pin is valid
      *
@@ -200,10 +269,11 @@ public class WiMicServer implements Runnable {
         new Thread(new Runnable() {
             public void run() {
                 try {
-                    DatagramSocket voiceSocket = new DatagramSocket(
+                    voiceSocket = new DatagramSocket(
                         SPEAK_PORT,
                         InetAddress.getByName(LOCALHOST)
                     );
+
                     byte[] receiveData = new byte[3800];
                     initialize();
 
@@ -212,6 +282,11 @@ public class WiMicServer implements Runnable {
 
                     while (status == true) {
                         voiceSocket.receive(receivePacket);
+
+                        if (isChannelAvailable) {
+                            sendMessage(voiceSocket, receivePacket, SPEAK_TIMEOUT);
+                        }
+
                         ais = new AudioInputStream(baiss, format, receivePacket.getLength());
                         toSpeaker(receivePacket.getData());
                     }

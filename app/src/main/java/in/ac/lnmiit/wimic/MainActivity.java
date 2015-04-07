@@ -8,6 +8,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.DhcpInfo;
 import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
 import android.provider.Settings;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -59,6 +60,9 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Intent intent = getIntent();
+        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+
         // Will work only after setting contentView
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
 
@@ -67,14 +71,12 @@ public class MainActivity extends ActionBarActivity {
         recyclerView.setLayoutManager(linearLayoutManager);
 
         // TODO: Can be improved
-        // Initialize empty adapter
-        List<Room> rooms = new ArrayList<>();
+        List<Room> rooms = new ArrayList<>();   // Initialize empty adapter
         RVAdapter adapter = new RVAdapter(rooms);
         recyclerView.setAdapter(adapter);
 
         checkWifi();
     }
-
 
     /**
      * Creates ActionBar
@@ -103,6 +105,9 @@ public class MainActivity extends ActionBarActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            return true;
+        } else if (id == R.id.action_refresh) {
+            checkWifi();
             return true;
         }
 
@@ -181,7 +186,10 @@ public class MainActivity extends ActionBarActivity {
      */
     private void sendBroadcastPackets() throws IOException {
         // Start a new Async Task
-        new Network(recyclerView).execute(getBroadcastAddress());
+        new Network(recyclerView, MainActivity.this).executeOnExecutor(
+                AsyncTask.THREAD_POOL_EXECUTOR,
+                getBroadcastAddress()
+        );
     }
 
     /**

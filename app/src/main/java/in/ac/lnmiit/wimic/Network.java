@@ -1,14 +1,19 @@
 package in.ac.lnmiit.wimic;
 
+import android.app.Activity;
+import android.content.ContextWrapper;
 import android.os.AsyncTask;
 import android.support.v7.widget.RecyclerView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Handler;
 
 /**
  * class Network
@@ -25,7 +30,7 @@ public class Network extends AsyncTask<InetAddress, Room, List<Room>> {
     /**
      * Time duration for which scan rooms available
      */
-    private final int timeout = 60;     // In seconds, i.e 1 min
+    private final int timeout = 10;     // In seconds, i.e 1 min
 
     /**
      * Message format:
@@ -49,12 +54,18 @@ public class Network extends AsyncTask<InetAddress, Room, List<Room>> {
     private RecyclerView recyclerView;
 
     /**
+     * Object of main activity to update view
+     */
+    private Activity mainActivity;
+
+    /**
      * Constructor
      *
      * @param recyclerView RecyclerView object
      */
-    Network(RecyclerView recyclerView) {
+    Network(RecyclerView recyclerView, Activity activity) {
         this.recyclerView = recyclerView;
+        mainActivity = activity;
     }
 
     /**
@@ -86,11 +97,30 @@ public class Network extends AsyncTask<InetAddress, Room, List<Room>> {
             // Close the socket
             socket.close();
 
-        } catch (Exception e) {
-            // TODO
+        } catch (IOException e) {
+            showToast("Try again later");
         }
 
         return rooms;
+    }
+
+    /**
+     * Show toast message on UI thread if search
+     * is already in progress
+     *
+     * @param message Message to show on Toast
+     */
+    private void showToast(final String message) {
+        mainActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(
+                        mainActivity.getApplicationContext(),
+                        message,
+                        Toast.LENGTH_LONG
+                ).show();
+            }
+        });
     }
 
     /**
@@ -105,18 +135,25 @@ public class Network extends AsyncTask<InetAddress, Room, List<Room>> {
 
         // Discover server only for 'timeout' seconds.
         long startTime = System.currentTimeMillis();
+        socket.setSoTimeout(timeout * 1000);
         while ((System.currentTimeMillis() - startTime) < timeout * 1000) {
-            socket.receive(receivePacket);
+            try {
+                socket.receive(receivePacket);
 
-            String message = new String(receivePacket.getData()).trim();
-            String[] serverDetails;
+                String message = new String(receivePacket.getData()).trim();
+                String[] serverDetails;
 
-            if (message.contains(ACK_MESSAGE)) {
-                serverDetails = message.split(";");
-                Room newRoom = new Room(serverDetails[1], receivePacket.getAddress().toString());
-                rooms.add(newRoom);
+                if (message.contains(ACK_MESSAGE)) {
+                    serverDetails = message.split(";");
+                    Room newRoom = new Room(serverDetails[1], receivePacket.getAddress().toString());
+                    rooms.add(newRoom);
 
-                publishProgress(newRoom);
+                    publishProgress(newRoom);
+                }
+            } catch (SocketTimeoutException e) {
+                // Timeout has reached. Do nothing
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }
