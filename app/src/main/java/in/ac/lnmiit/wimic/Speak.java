@@ -215,14 +215,14 @@ public class Speak extends ActionBarActivity {
                         Toast.makeText(
                                 getApplicationContext(),
                                 "Channel unavailable",
-                                Toast.LENGTH_LONG
+                                Toast.LENGTH_SHORT
                         ).show();
                         break;
                     default:
                         Toast.makeText(
                                 getApplicationContext(),
                                 "Some error occurred",
-                                Toast.LENGTH_LONG
+                                Toast.LENGTH_SHORT
                         ).show();
                         break;
                 }
