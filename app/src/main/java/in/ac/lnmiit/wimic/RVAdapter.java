@@ -41,7 +41,7 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.RoomViewHolder> {
         RoomViewHolder(View itemView) {
             super(itemView);
             cv = (CardView) itemView.findViewById(R.id.card_view);
-            name = (TextView) itemView.findViewById(R.id.info_text);
+            name = (TextView) itemView.findViewById(R.id.room_name);
             ip = (TextView) itemView.findViewById(R.id.ip_addr);
             mic = (ImageView) itemView.findViewById(R.id.mic_photo);
         }

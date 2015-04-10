@@ -21,6 +21,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -70,7 +71,6 @@ public class MainActivity extends ActionBarActivity {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(linearLayoutManager);
 
-        // TODO: Can be improved
         List<Room> rooms = new ArrayList<>();   // Initialize empty adapter
         RVAdapter adapter = new RVAdapter(rooms);
         recyclerView.setAdapter(adapter);
@@ -186,7 +186,7 @@ public class MainActivity extends ActionBarActivity {
      */
     private void sendBroadcastPackets() throws IOException {
         // Start a new Async Task
-        new Network(recyclerView, MainActivity.this).executeOnExecutor(
+        new Scanner(recyclerView, MainActivity.this).executeOnExecutor(
                 AsyncTask.THREAD_POOL_EXECUTOR,
                 getBroadcastAddress()
         );
@@ -199,8 +199,9 @@ public class MainActivity extends ActionBarActivity {
      */
     public void onClick(View v) {
         final TextView addressView = (TextView) v.findViewById(R.id.ip_addr);
-
+        final TextView nameView = (TextView) v.findViewById(R.id.room_name);
         final EditText passField = new EditText(this);
+
         passField.setInputType(InputType.TYPE_CLASS_NUMBER);
         passField.setLayoutParams(new ActionBar.LayoutParams(50, 50));
 
@@ -221,13 +222,14 @@ public class MainActivity extends ActionBarActivity {
 
                     String password = passField.getText().toString();
                     String ipAddress = addressView.getText().toString(); // Ex "/192.168.xxx.xxx"
+                    String roomName = nameView.getText().toString();
 
                     // Strip the '/' if present
                     if (ipAddress.charAt(0) == '/') {
                         ipAddress = ipAddress.substring(1);
                     }
 
-                    joinRoom(ipAddress, password, dialog);
+                    joinRoom(ipAddress, password, roomName, dialog);
                 }
             })
             .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -238,7 +240,6 @@ public class MainActivity extends ActionBarActivity {
             })
             .create()
             .show();
-
     }
 
     /**
@@ -248,33 +249,23 @@ public class MainActivity extends ActionBarActivity {
      * @param pin Pin entered by user
      * @param dialog ProgressDialog
      */
-    private void joinRoom(final String ipAddress, final String pin, final ProgressDialog dialog) {
-        // TODO: Move it to a new Async class
-        final String JOIN_MESSAGE = "WIMIC_JOIN_PASSWORD";
-        final String JOIN_SUCCESS = "WIMIC_JOIN_SUCCESS";
-        final String JOIN_FAIL = "WIMIC_JOIN_FAILURE";
-        final int PORT_BIND = 9877;  // USE DIFFERENT PORT AS 9876 IS ALREADY IN USE
-        final int PORT_SEND = 9876;
-        final String LOCALHOST = "0.0.0.0";
-
-
+    private void joinRoom(
+            final String ipAddress,
+            final String pin,
+            final String roomName,
+            final ProgressDialog dialog
+    ) {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    DatagramSocket socket = new DatagramSocket(PORT_BIND, InetAddress.getByName(LOCALHOST));
-                    byte[] sendData = (JOIN_MESSAGE + ";" + pin).getBytes();
-
-                    System.out.println(InetAddress.getByName(ipAddress));
-
-                    DatagramPacket sendPacket = new DatagramPacket(
-                            sendData,
-                            sendData.length,
-                            InetAddress.getByName(ipAddress),
-                            PORT_SEND
+                    DatagramSocket socket = new DatagramSocket();
+                    sendMessage(
+                            socket,
+                            Config.JOIN_MESSAGE + ";" + pin,
+                            ipAddress,
+                            Config.MESSAGE_PORT
                     );
-
-                    socket.send(sendPacket);
 
                     // Receive the response
                     byte[] receiveBuffer = new byte[15000];
@@ -284,27 +275,72 @@ public class MainActivity extends ActionBarActivity {
                     );
 
                     socket.receive(packet);
-                    String message = new String(packet.getData()).trim();
-
-                    if (message.equals(JOIN_SUCCESS)) {
-                        System.out.println("SUCCESS");
-
-                        Intent myIntent = new Intent(MainActivity.this, Speak.class);
-                        myIntent.putExtra("ipAddress", ipAddress);
-                        MainActivity.this.startActivity(myIntent);
-                    } else if (message.equals(JOIN_FAIL)) {
-                        // TODO
-                        System.out.println("Wrong PIN entered");
-                    }
+                    handleResponse(packet, ipAddress, roomName);
 
                     dialog.dismiss();
                     socket.close();
                 } catch (Exception e) {
                     // TODO
                     e.printStackTrace();
-                    dialog.dismiss();
                 }
             }
         }).start();
+    }
+
+    /**
+     * Sends a message to a given IP and port
+     *
+     * @param socket Socket object
+     * @param message Message to send
+     * @param ipAddress Receiver's IP
+     * @param port Receiver's Port
+     *
+     * @throws Exception if not able to send message
+     */
+    private void sendMessage(
+            DatagramSocket socket,
+            String message,
+            String ipAddress,
+            int port
+    ) throws Exception {
+        byte[] sendData = message.getBytes();
+
+        DatagramPacket sendPacket = new DatagramPacket(
+                sendData,
+                sendData.length,
+                InetAddress.getByName(ipAddress),
+                port
+        );
+
+        socket.send(sendPacket);
+    }
+
+    /**
+     * Handles response from Join Room message
+     *
+     * @param packet Response
+     * @param ipAddress Receiver's IP
+     */
+    private void handleResponse(DatagramPacket packet, String ipAddress, String roomName) {
+        String message = new String(packet.getData()).trim();
+
+        if (message.equals(Config.JOIN_SUCCESS)) {
+            Intent myIntent = new Intent(MainActivity.this, Speak.class);
+            myIntent.putExtra("ipAddress", ipAddress);
+            myIntent.putExtra("roomName", roomName);
+            MainActivity.this.startActivity(myIntent);
+
+        } else if (message.equals(Config.JOIN_FAIL)) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(
+                            getApplicationContext(),
+                            "Invalid PIN",
+                            Toast.LENGTH_LONG
+                    ).show();
+                }
+            });
+        }
     }
 }

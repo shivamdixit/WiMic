@@ -3,6 +3,7 @@
     <words>
       <w>addr</w>
       <w>dhcp</w>
+      <w>nack</w>
       <w>wimic</w>
     </words>
   </dictionary>

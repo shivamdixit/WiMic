@@ -13,8 +13,6 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import java.io.IOError;
-import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -23,44 +21,25 @@ import java.net.InetAddress;
 public class Speak extends ActionBarActivity {
 
     /**
-     * Port to send data
-     */
-    private int speakPort = 9898;    // SPEAK_PORT on server
-
-    // TODO: Refactor into single config file
-    private final int PORT = 9876;
-
-    private final String SPEAK_MESSAGE = "WIMIC_SPEAK_REQ";
-    private final String STOP_SPEAK_MESSAGE = "WIMIC_SPEAK_END";
-    private final String SPEAK_ACK = "WIMIC_SPEAK_ACK";
-    private final String SPEAK_NACK = "WIMIC_SPEAK_NACK";
-    private final String SPEAK_TIMEOUT = "WIMIC_SPEAK_TIMEOUT";
-
-    /**
      * Audio config
      */
-    private AudioRecord recorder;
     private int sampleRate = 16000;
     private int channelConfig = AudioFormat.CHANNEL_IN_MONO;
     private int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
+    private AudioRecord recorder;
 
     /**
-     * Initialize minimum buffer
+     * Initialize minimum buffer.
      */
-    int minBufSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat);
+    private int minBufSize;
 
     /**
-     * IP Address of destination host
+     * IP Address of destination host.
      */
     private InetAddress destination;
 
     /**
-     * Localhost IP Address
-     */
-    private String LOCALHOST = "0.0.0.0";
-
-    /**
-     * Flag to test if button is pressed
+     * Flag to test if button is pressed.
      */
     private boolean buttonPressed = false;
 
@@ -71,12 +50,21 @@ public class Speak extends ActionBarActivity {
 
     /**
      * Holds the socket object for other queries like
-     * if channel is available or not
+     * if channel is available or not.
      */
     private DatagramSocket otherSocket;
 
     /**
-     * Entry point of the activity. Initializes required objects.
+     * Flag to check whether to send stop message on
+     * button release.
+     *
+     * Hint: Don't send it if channel is available or
+     * timeout has occurred.
+     */
+    private boolean sendStopMessageOnRelease = false;
+
+    /**
+     * Entry point of the activity, initializes required objects.
      *
      * @param savedInstanceState Instance state
      */
@@ -85,13 +73,14 @@ public class Speak extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_speak);
 
+        // Display back button and title
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle(getIntent().getExtras().getString("roomName"));
+        minBufSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat) + 3800;
 
         try {
-            minBufSize += 3800;
-            // TODO: Extract the key outside in a common file
             destination = InetAddress.getByName(getIntent().getExtras().getString("ipAddress"));
-            socket = new DatagramSocket(speakPort, InetAddress.getByName(LOCALHOST));
+            socket = new DatagramSocket();
             recorder = new AudioRecord(
                     MediaRecorder.AudioSource.MIC,
                     sampleRate,
@@ -108,7 +97,7 @@ public class Speak extends ActionBarActivity {
     }
 
     /**
-     * Initialize touch listener on speak button
+     * Initialize touch listener on speak button.
      */
     private void addTouchListener() {
         ImageView startButton = (ImageView) findViewById(R.id.speak_button);
@@ -117,19 +106,11 @@ public class Speak extends ActionBarActivity {
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
-                        System.out.println("Button pressed");
-                        buttonPressed = true;
-                        tryStreaming();
+                        handleButtonDown();
                         break;
 
                     case MotionEvent.ACTION_UP:
-                        System.out.println("Button Released");
-                        if (buttonPressed) {
-                            buttonPressed = false;
-                            sendStopMessage();
-                            recorder.stop();
-                        }
-
+                        handleButtonUp();
                         break;
                 }
                 return true;
@@ -137,24 +118,51 @@ public class Speak extends ActionBarActivity {
         });
     }
 
+    /**
+     * Handles speak button down.
+     */
+    private void handleButtonDown() {
+        System.out.println("Button pressed");
+        if (!buttonPressed) {
+            buttonPressed = true;
+            tryStreaming(); // If channel is available start transmission
+        }
+    }
+
+    /**
+     * Handles speak button up.
+     */
+    private void handleButtonUp() {
+        System.out.println("Button Released");
+        if (buttonPressed) {
+            buttonPressed = false;
+            if (sendStopMessageOnRelease) {
+                sendStopMessage();
+            }
+
+            if (recorder.getState() == AudioRecord.STATE_INITIALIZED) {
+                recorder.stop();
+            }
+        }
+    }
+
+    /**
+     * Checks if channel is available for transmission.
+     * If available, then start transmissions.
+     */
     private void tryStreaming() {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    DatagramSocket checkStreamSocket = new DatagramSocket(
-                            12345,
-                            InetAddress.getByName(LOCALHOST)
-                    );
-
-                    byte[] toSend = SPEAK_MESSAGE.getBytes();
+                    DatagramSocket checkStreamSocket = new DatagramSocket();
+                    byte[] toSend = Config.SPEAK_MESSAGE.getBytes();
                     DatagramPacket packet = new DatagramPacket(
                             toSend,
                             toSend.length,
                             destination,
-                            PORT
+                            Config.MESSAGE_PORT
                     );
-
                     checkStreamSocket.send(packet);
 
                     byte[] receiveBuffer = new byte[15000];
@@ -162,28 +170,9 @@ public class Speak extends ActionBarActivity {
                             receiveBuffer,
                             receiveBuffer.length
                     );
-
                     checkStreamSocket.receive(receivePacket);
                     final String message = new String(receivePacket.getData()).trim();
-
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (message.equals(SPEAK_ACK)) {
-                                // Channel is available
-                                ImageView speakBtn = (ImageView) findViewById(R.id.speak_button);
-                                speakBtn.setImageResource(R.drawable.button_green);
-                                startStreaming();
-                            } else {
-                                // Channel is not available
-                                Toast.makeText(
-                                        getApplicationContext(),
-                                        "Channel unavailable",
-                                        Toast.LENGTH_LONG
-                                ).show();
-                            }
-                        }
-                    });
+                    handleStreamResponse(message);
 
                     checkStreamSocket.close();
                 } catch (Exception e) {
@@ -195,33 +184,84 @@ public class Speak extends ActionBarActivity {
         }).start();
     }
 
+    /**
+     * Checks if response of speak request is ACK or NACK.
+     * If channel is available (ACK), start streaming.
+     *
+     * @param message Message received in response
+     */
+    private void handleStreamResponse(final String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                // Ignore the response if button is no longer pressed
+                // before the response comes.
+                if (!buttonPressed) {
+                    return;
+                }
+
+                switch (message) {
+                    case Config.SPEAK_ACK:
+                        // Channel is available
+                        ImageView speakBtn = (ImageView) findViewById(R.id.speak_button);
+                        speakBtn.setImageResource(R.drawable.button_green);
+                        sendStopMessageOnRelease = true;
+                        startStreaming();
+                        break;
+
+                    case Config.SPEAK_NACK:
+                        // Channel is not available
+                        sendStopMessageOnRelease = false;
+                        Toast.makeText(
+                                getApplicationContext(),
+                                "Channel unavailable",
+                                Toast.LENGTH_LONG
+                        ).show();
+                        break;
+                    default:
+                        Toast.makeText(
+                                getApplicationContext(),
+                                "Some error occurred",
+                                Toast.LENGTH_LONG
+                        ).show();
+                        break;
+                }
+            }
+        });
+    }
+
+    /**
+     * Sends stop message to the server
+     */
     private void sendStopMessage() {
         try {
             ImageView speakBtn = (ImageView) findViewById(R.id.speak_button);
             speakBtn.setImageResource(R.drawable.button_speak);
 
-            sendMessage(STOP_SPEAK_MESSAGE);
+            sendMessage(Config.STOP_SPEAK_MESSAGE);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * Send message to server on MESSAGE_PORT
+     *
+     * @param message Message to send
+     */
     private void sendMessage(final String message) {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    otherSocket = new DatagramSocket(
-                            12345,
-                            InetAddress.getByName(LOCALHOST)
-                    );
+                    otherSocket = new DatagramSocket();
 
                     byte[] toSend = message.getBytes();
                     DatagramPacket packet = new DatagramPacket(
                             toSend,
                             toSend.length,
                             destination,
-                            PORT
+                            Config.MESSAGE_PORT
                     );
 
                     otherSocket.send(packet);
@@ -240,51 +280,21 @@ public class Speak extends ActionBarActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                // Initialize min buffer size every time
+                minBufSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat);
+                minBufSize += 3800;
+                byte[] buffer = new byte[minBufSize];
+
                 try {
-                    byte[] buffer = new byte[minBufSize];
-
                     recorder.startRecording();
-
-                    // Listen for timeout
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                byte[] receiveBuffer = new byte[15000];
-                                DatagramPacket receivePacket = new DatagramPacket(
-                                        receiveBuffer,
-                                        receiveBuffer.length
-                                );
-
-                                socket.receive(receivePacket);
-
-                                final String message = new String(receivePacket.getData()).trim();
-                                if (message.equals(SPEAK_TIMEOUT)) {
-                                    buttonPressed = false;
-                                    recorder.stop();
-
-                                    // Change the UI
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            ImageView speakBtn = (ImageView) findViewById(R.id.speak_button);
-                                            speakBtn.setImageResource(R.drawable.button_speak);
-                                        }
-                                    });
-                                }
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }).start();
-
+                    listenTimeout();
                     while (buttonPressed) {
                         minBufSize = recorder.read(buffer, 0, buffer.length);
                         DatagramPacket packet = new DatagramPacket(
                                 buffer,
                                 buffer.length,
                                 destination,
-                                speakPort
+                                Config.SPEAK_PORT
                         );
 
                         socket.send(packet);
@@ -296,6 +306,54 @@ public class Speak extends ActionBarActivity {
                 }
             }
         }).start();
+    }
+
+    /**
+     * Listens for timeout event on speaking
+     */
+    private void listenTimeout() {
+        // Listen for timeout event
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    byte[] receiveBuffer = new byte[15000];
+                    DatagramPacket receivePacket = new DatagramPacket(
+                            receiveBuffer,
+                            receiveBuffer.length
+                    );
+
+                    socket.receive(receivePacket);
+
+                    final String message = new String(receivePacket.getData()).trim();
+                    if (message.equals(Config.SPEAK_TIMEOUT) && buttonPressed) {
+                        handleTimeout();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    /**
+     * Turns the button red if channel is unavailable
+     * and sets the flags.
+     */
+    private void handleTimeout() {
+        buttonPressed = false;
+        sendStopMessageOnRelease = false;
+
+        recorder.stop();
+
+        // Update the UI on UI Thread
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ImageView speakBtn = (ImageView) findViewById(R.id.speak_button);
+                speakBtn.setImageResource(R.drawable.button_speak);
+            }
+        });
     }
 
     /**
