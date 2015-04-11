@@ -35,6 +35,12 @@
                 android:layout_alignParentTop="true"
                 android:textSize="30sp"
                 android:textColor="@color/room_name"
+                android:lines="1"
+                android:singleLine="true"
+                android:ellipsize="marquee"
+                android:fadingEdge="horizontal"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:scrollHorizontally="true"
                 android:layout_marginTop="2dp" />
 
             <TextView
