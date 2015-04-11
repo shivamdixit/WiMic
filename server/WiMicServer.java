@@ -58,7 +58,15 @@ public class WiMicServer implements Runnable {
      */
     private int timeout = 60 * 1000;
 
+    /**
+     * Timer for voice requests
+     */
     private Timer timer;
+
+    /**
+     * Length of PIN
+     */
+    private final int PIN_LENGTH = 4;
 
     /**
      * Variables used for transmitting voice
@@ -203,6 +211,9 @@ public class WiMicServer implements Runnable {
         socket.send(sendPacket);
     }
 
+    /**
+     * Check and send speak message acknowledgement
+     */
     private void sendSpeakACK(DatagramSocket socket, DatagramPacket packet) throws IOException {
         if (isChannelAvailable) {
             isChannelAvailable = false;
@@ -215,6 +226,9 @@ public class WiMicServer implements Runnable {
         }
     }
 
+    /**
+     * Send message to client
+     */
     private void sendMessage(
         DatagramSocket socket,
         DatagramPacket packet,
@@ -232,6 +246,9 @@ public class WiMicServer implements Runnable {
         socket.send(sendPacket);
     }
 
+    /**
+     * Add timeout for each request
+     */
     private void setTimeout() {
         timer = new Timer();
         timer.schedule(new TimerTask(){
@@ -254,7 +271,7 @@ public class WiMicServer implements Runnable {
         String regex = "\\d+";
         int pinInt;
 
-        if (pin.matches(regex)) {
+        if (pin.matches(regex) && pin.length() == PIN_LENGTH) {
             pinInt = Integer.parseInt(pin);
 
             if (this.pin == pinInt) {
@@ -265,6 +282,9 @@ public class WiMicServer implements Runnable {
         return false;
     }
 
+    /**
+     * Listens for voice packets
+     */
     private void receiveVoicePackets() {
         new Thread(new Runnable() {
             public void run() {
@@ -337,10 +357,20 @@ public class WiMicServer implements Runnable {
     public static void main(String[] args) {
         Scanner sc;
         sc = new Scanner(System.in);
-        String name;
+        String name = new String();
+        boolean validName = false;
 
-        System.out.println("Enter room name:");
-        name = sc.next();
+        while (!validName) {
+            System.out.println("Enter room name:");
+            name = sc.nextLine();
+            name = name.trim();
+
+            if (name.length() > 0 && name.length() <= 12) {
+                validName = true;
+            } else {
+                System.out.println("Name must be between 1 to 12 chars");
+            }
+        }
 
         // Generate a random pin
         double rand = Math.random() * 8999 + 1000;
