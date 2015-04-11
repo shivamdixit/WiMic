@@ -23,25 +23,9 @@ import java.util.logging.Handler;
 public class Scanner extends AsyncTask<InetAddress, Room, List<Room>> {
 
     /**
-     * Port to bind on
-     */
-    private final int PORT = 9876;
-
-    /**
      * Time duration for which scan rooms available
      */
     private final int timeout = 10;     // In seconds, i.e 1 min
-
-    /**
-     * Message format:
-     * From server->
-     * ACK_MESSAGE;serverName
-     *
-     * From client->
-     * DISC_MESSAGE
-     */
-    private final String DISC_MESSAGE = "WIMIC_DISCOVER_REQ";
-    private final String ACK_MESSAGE = "WIMIC_DISCOVER_ACK";
 
     /**
      * Create a list of rooms to cache for later use
@@ -77,15 +61,15 @@ public class Scanner extends AsyncTask<InetAddress, Room, List<Room>> {
     @Override
     protected List<Room> doInBackground(InetAddress... ip) {
         try {
-            DatagramSocket socket = new DatagramSocket(PORT);
+            DatagramSocket socket = new DatagramSocket();
             socket.setBroadcast(true);
 
-            byte[] sendData = DISC_MESSAGE.getBytes();
+            byte[] sendData = Config.DISC_MESSAGE.getBytes();
             DatagramPacket packet = new DatagramPacket(
                     sendData,
                     sendData.length,
                     ip[0],
-                    PORT
+                    Config.MESSAGE_PORT
             );
 
             socket.send(packet);
@@ -143,7 +127,7 @@ public class Scanner extends AsyncTask<InetAddress, Room, List<Room>> {
                 String message = new String(receivePacket.getData()).trim();
                 String[] serverDetails;
 
-                if (message.contains(ACK_MESSAGE)) {
+                if (message.contains(Config.ACK_MESSAGE)) {
                     serverDetails = message.split(";");
                     Room newRoom = new Room(serverDetails[1], receivePacket.getAddress().toString());
                     rooms.add(newRoom);

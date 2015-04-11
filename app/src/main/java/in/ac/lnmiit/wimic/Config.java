@@ -12,4 +12,8 @@ public class Config {
     public final static String SPEAK_ACK = "WIMIC_SPEAK_ACK";
     public final static String SPEAK_NACK = "WIMIC_SPEAK_NACK";
     public final static String SPEAK_TIMEOUT = "WIMIC_SPEAK_TIMEOUT";
+
+    // From server: ACK_MESSAGE;name
+    public final static String DISC_MESSAGE = "WIMIC_DISCOVER_REQ";
+    public final static String ACK_MESSAGE = "WIMIC_DISCOVER_ACK";
 }
