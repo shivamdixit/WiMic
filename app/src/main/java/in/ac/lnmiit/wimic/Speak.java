@@ -204,7 +204,7 @@ public class Speak extends ActionBarActivity {
                     case Config.SPEAK_ACK:
                         // Channel is available
                         ImageView speakBtn = (ImageView) findViewById(R.id.speak_button);
-                        speakBtn.setImageResource(R.drawable.button_green);
+                        speakBtn.setImageResource(R.drawable.speak_button_green);
                         sendStopMessageOnRelease = true;
                         startStreaming();
                         break;
@@ -236,7 +236,7 @@ public class Speak extends ActionBarActivity {
     private void sendStopMessage() {
         try {
             ImageView speakBtn = (ImageView) findViewById(R.id.speak_button);
-            speakBtn.setImageResource(R.drawable.button_speak);
+            speakBtn.setImageResource(R.drawable.speak_button_red);
 
             sendMessage(Config.STOP_SPEAK_MESSAGE);
         } catch (Exception e) {
@@ -351,7 +351,7 @@ public class Speak extends ActionBarActivity {
             @Override
             public void run() {
                 ImageView speakBtn = (ImageView) findViewById(R.id.speak_button);
-                speakBtn.setImageResource(R.drawable.button_speak);
+                speakBtn.setImageResource(R.drawable.speak_button_red);
             }
         });
     }

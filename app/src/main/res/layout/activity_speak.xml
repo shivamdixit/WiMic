@@ -10,7 +10,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/speak_button"
-        android:src="@drawable/button_speak"
+        android:src="@drawable/speak_button_red"
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
         android:paddingRight="50dp"
