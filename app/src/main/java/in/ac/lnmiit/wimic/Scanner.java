@@ -1,7 +1,6 @@
 package in.ac.lnmiit.wimic;
 
 import android.app.Activity;
-import android.content.ContextWrapper;
 import android.os.AsyncTask;
 import android.support.v7.widget.RecyclerView;
 import android.widget.Toast;
@@ -13,7 +12,6 @@ import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Handler;
 
 /**
  * class Network
@@ -48,6 +46,7 @@ public class Scanner extends AsyncTask<InetAddress, Room, List<Room>> {
      * @param recyclerView RecyclerView object
      */
     Scanner(RecyclerView recyclerView, Activity activity) {
+        super();
         this.recyclerView = recyclerView;
         mainActivity = activity;
     }
@@ -167,5 +166,7 @@ public class Scanner extends AsyncTask<InetAddress, Room, List<Room>> {
     @Override
     protected void onPostExecute(List<Room> rooms) {
         // TODO Add caching of rooms
+        ((MainActivity) mainActivity).resetRefresh();   // Stops the refresh button animation
+
     }
 }

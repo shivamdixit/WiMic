@@ -15,11 +15,15 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -48,6 +52,11 @@ public class MainActivity extends ActionBarActivity {
     protected RecyclerView recyclerView;
 
     /**
+     *
+     */
+    private MenuItem refreshItem;
+
+    /**
      * Entry point of the application. Draws the UI and initiate
      * server discovery
      *
@@ -74,8 +83,6 @@ public class MainActivity extends ActionBarActivity {
         List<Room> rooms = new ArrayList<>();   // Initialize empty adapter
         RVAdapter adapter = new RVAdapter(rooms);
         recyclerView.setAdapter(adapter);
-
-        checkWifi();
     }
 
     /**
@@ -88,6 +95,10 @@ public class MainActivity extends ActionBarActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_main, menu);
+
+        refreshItem = menu.findItem(R.id.action_refresh);
+        checkWifi();    // Placed here so that refreshItem is initialized
+
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -129,7 +140,7 @@ public class MainActivity extends ActionBarActivity {
                 System.out.println("WiFI is enabled");
                 sendBroadcastPackets();
             } catch (Exception e) {
-                System.out.println("Caught Exception!");
+                e.printStackTrace();
             }
         }
     }
@@ -185,11 +196,41 @@ public class MainActivity extends ActionBarActivity {
      * @throws IOException if it is not able to send packets
      */
     private void sendBroadcastPackets() throws IOException {
+        animateRefresh();
+
         // Start a new Async Task
         new Scanner(recyclerView, MainActivity.this).executeOnExecutor(
                 AsyncTask.THREAD_POOL_EXECUTOR,
                 getBroadcastAddress()
         );
+    }
+
+    /**
+     * Starts animation on refresh button
+     */
+    private void animateRefresh() {
+        LayoutInflater inflater = (LayoutInflater) MainActivity.this.getSystemService(
+                Context.LAYOUT_INFLATER_SERVICE
+        );
+        ImageView imageView = (ImageView) inflater.inflate(R.layout.refresh_action_view, null);
+        Animation rotation = AnimationUtils.loadAnimation(
+                MainActivity.this,
+                R.anim.clockwise_refresh
+        );
+        rotation.setRepeatCount(Animation.INFINITE);
+        imageView.startAnimation(rotation);
+
+        refreshItem.setActionView(imageView);
+    }
+
+    /**
+     * Stops animation on refresh button
+     */
+    public void resetRefresh() {
+        if (refreshItem.getActionView() != null) {
+            refreshItem.getActionView().clearAnimation();
+            refreshItem.setActionView(null);
+        }
     }
 
     /**
