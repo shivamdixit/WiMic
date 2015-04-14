@@ -331,9 +331,10 @@ public class WiMicServer implements Runnable {
         sourceDataLine.open(format);
         
         sourceDataLine.start();
-        if (sourceDataLine.isControlSupported( FloatControl.Type.MASTER_GAIN)) {
+        if (sourceDataLine.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
             FloatControl volumeControl = (FloatControl) sourceDataLine.getControl(
-                                                     FloatControl.Type.MASTER_GAIN);
+                FloatControl.Type.MASTER_GAIN
+            );
             volumeControl.setValue(1.00f);
         }
     }
