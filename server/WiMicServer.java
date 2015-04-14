@@ -329,13 +329,10 @@ public class WiMicServer implements Runnable {
         dataLineInfo = new DataLine.Info(SourceDataLine.class, format);
         sourceDataLine = (SourceDataLine) AudioSystem.getLine(dataLineInfo);
         sourceDataLine.open(format);
-        
         sourceDataLine.start();
-        if (sourceDataLine.isControlSupported( FloatControl.Type.MASTER_GAIN)) {
-            FloatControl volumeControl = (FloatControl) sourceDataLine.getControl(
-                                                     FloatControl.Type.MASTER_GAIN);
-            volumeControl.setValue(1.00f);
-        }
+
+        FloatControl volumeControl = (FloatControl) sourceDataLine.getControl(FloatControl.Type.MASTER_GAIN);
+        volumeControl.setValue(1.00f);
     }
 
     /**
