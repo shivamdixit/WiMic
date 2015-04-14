@@ -330,7 +330,7 @@ public class WiMicServer implements Runnable {
         sourceDataLine = (SourceDataLine) AudioSystem.getLine(dataLineInfo);
         sourceDataLine.open(format);
         
-	sourceDataLine.start();
+        sourceDataLine.start();
         if (sourceDataLine.isControlSupported( FloatControl.Type.MASTER_GAIN)) {
             FloatControl volumeControl = (FloatControl) sourceDataLine.getControl(
                                                      FloatControl.Type.MASTER_GAIN);
