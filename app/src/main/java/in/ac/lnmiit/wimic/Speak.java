@@ -196,7 +196,8 @@ public class Speak extends ActionBarActivity {
             public void run() {
                 // Ignore the response if button is no longer pressed
                 // before the response comes.
-                if (!buttonPressed) {
+                if (!buttonPressed && message.equals(Config.SPEAK_ACK)) {
+                    sendStopMessage();
                     return;
                 }
 
