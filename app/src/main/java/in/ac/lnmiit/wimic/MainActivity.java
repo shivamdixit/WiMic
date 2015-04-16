@@ -115,7 +115,8 @@ public class MainActivity extends ActionBarActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_about) {
+            openAbout();
             return true;
         } else if (id == R.id.action_refresh) {
             checkWifi();
@@ -126,12 +127,21 @@ public class MainActivity extends ActionBarActivity {
     }
 
     /**
+     * Opens the about activity
+     *
+     */
+    private void openAbout() {
+        Intent myIntent = new Intent(MainActivity.this, About.class);
+        MainActivity.this.startActivity(myIntent);
+
+    }
+    /**
      * Checks if WiFi is enabled or not.
      *
      * If enabled, search for available servers else prompt
      * user to enable it.
      */
-    private void checkWifi() {
+    private void checkWifi(){
         if (!wifi.isWifiEnabled()) {
             System.out.println("WiFI is disabled");
             showWifiPrompt();
