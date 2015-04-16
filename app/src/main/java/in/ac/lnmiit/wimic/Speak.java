@@ -1,5 +1,6 @@
 package in.ac.lnmiit.wimic;
 
+import android.content.Intent;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
@@ -384,7 +385,8 @@ public class Speak extends ActionBarActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_about) {
+            openAbout();
             return true;
         } else if (id == android.R.id.home) {
             NavUtils.navigateUpFromSameTask(this);
@@ -392,5 +394,14 @@ public class Speak extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+    /**
+     * Opens the about activity
+     *
+     */
+    private void openAbout() {
+        Intent myIntent = new Intent(Speak.this, About.class);
+        Speak.this.startActivity(myIntent);
+
     }
 }

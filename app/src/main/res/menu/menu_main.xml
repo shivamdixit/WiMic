@@ -7,7 +7,7 @@
         app:showAsAction="ifRoom"
         android:actionLayout="@layout/refresh_action_view"
         style="@android:style/Widget.ActionButton" />
-    <item android:id="@+id/action_settings" android:title="@string/action_settings"
+    <item android:id="@+id/action_about" android:title="@string/action_about"
         android:orderInCategory="100" app:showAsAction="never" />
 
 </menu>
