@@ -294,7 +294,7 @@ public class WiMicServer implements Runnable {
                         InetAddress.getByName(LOCALHOST)
                     );
 
-                    byte[] receiveData = new byte[3800];
+                    byte[] receiveData = new byte[5000];
                     initialize();
 
                     DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
