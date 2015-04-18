@@ -2,10 +2,10 @@
 <project name="wimic" basedir="." default="build">
     <property environment="ENV"/>
 
-    <property name="src.dir" value="src/main/java/in/ac/lnmiit/wimic"/>
+    <property name="src.dir" value="server/src/main/java/in/ac/lnmiit/wimic"/>
     <property name="tests.dir" value="${src.dir}/test"/>
-    <property name="build.dir" value="build"/>
-    <property name="dependencies.dir" value="libs"/>
+    <property name="build.dir" value="server/build"/>
+    <property name="dependencies.dir" value="server/libs"/>
     <property name="tests.report.dir" value="${build.dir}/tests"/>
 
     <path id="junit.class.path">
