@@ -18,7 +18,7 @@
         <delete dir="${build.dir}"/>
     </target>
 
-    <target name="compile">
+    <target name="build">
         <mkdir dir="${build.dir}"/>
         <mkdir dir="${tests.report.dir}"/>
         <javac srcdir="${src.dir}" destdir="${build.dir}" debug="on" includeantruntime="false">
@@ -26,7 +26,7 @@
         </javac>
     </target>
 
-    <target name="test" depends="compile">
+    <target name="test" depends="build">
         <junit fork="true" haltonfailure="yes">
             <classpath refid="junit.class.path"/>
             <batchtest todir="${tests.report.dir}">
