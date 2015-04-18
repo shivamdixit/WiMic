@@ -335,7 +335,7 @@ public class MainActivity extends ActionBarActivity {
 
                     socket.setSoTimeout(Config.RESPONSE_TIMEOUT);
                     socket.receive(packet);
-                    handleResponse(packet, ipAddress, roomName);
+                    handleResponse(packet, ipAddress, roomName, pin);
 
                     dialog.dismiss();
                     socket.close();
@@ -409,13 +409,19 @@ public class MainActivity extends ActionBarActivity {
      * @param packet Response
      * @param ipAddress Receiver's IP
      */
-    private void handleResponse(DatagramPacket packet, String ipAddress, String roomName) {
+    private void handleResponse(
+            DatagramPacket packet,
+            String ipAddress,
+            String roomName,
+            String pin
+    ) {
         String message = new String(packet.getData()).trim();
 
         if (message.equals(Config.JOIN_SUCCESS)) {
             Intent myIntent = new Intent(MainActivity.this, Speak.class);
             myIntent.putExtra("ipAddress", ipAddress);
             myIntent.putExtra("roomName", roomName);
+            myIntent.putExtra("pin", pin);
             MainActivity.this.startActivity(myIntent);
 
         } else if (message.equals(Config.JOIN_FAIL)) {

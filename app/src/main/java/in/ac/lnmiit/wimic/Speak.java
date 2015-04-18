@@ -65,6 +65,11 @@ public class Speak extends ActionBarActivity {
     private boolean sendStopMessageOnRelease = false;
 
     /**
+     * PIN entered by user in MainActivity
+     */
+    private String pin;
+
+    /**
      * Entry point of the activity, initializes required objects.
      *
      * @param savedInstanceState Instance state
@@ -77,6 +82,8 @@ public class Speak extends ActionBarActivity {
         // Display back button and title
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setTitle(getIntent().getExtras().getString("roomName"));
+        pin = getIntent().getExtras().getString("pin");
+
         minBufSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat) + 3800;
 
         try {
@@ -157,7 +164,7 @@ public class Speak extends ActionBarActivity {
             public void run() {
                 try {
                     DatagramSocket checkStreamSocket = new DatagramSocket();
-                    byte[] toSend = Config.SPEAK_MESSAGE.getBytes();
+                    byte[] toSend = (Config.SPEAK_MESSAGE + ";" + pin).getBytes();
                     DatagramPacket packet = new DatagramPacket(
                             toSend,
                             toSend.length,
@@ -223,6 +230,11 @@ public class Speak extends ActionBarActivity {
                 }
 
                 switch (message) {
+                    case Config.SPEAK_AUTH_FAILED:
+                        showToast("Authentication failed");
+                        sendStopMessageOnRelease = false;
+                        break;
+
                     case Config.SPEAK_ACK:
                         // Channel is available
                         ImageView speakBtn = (ImageView) findViewById(R.id.speak_button);

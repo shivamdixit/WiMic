@@ -8,6 +8,7 @@ public class Config {
     public final static String JOIN_SUCCESS = "WIMIC_JOIN_SUCCESS";
     public final static String JOIN_FAIL = "WIMIC_JOIN_FAILURE";
 
+    public final static String SPEAK_AUTH_FAILED = "WIMIC_SPEAK_AUTH_FAILED";
     public final static String SPEAK_MESSAGE = "WIMIC_SPEAK_REQ";
     public final static String STOP_SPEAK_MESSAGE = "WIMIC_SPEAK_END";
     public final static String SPEAK_ACK = "WIMIC_SPEAK_ACK";

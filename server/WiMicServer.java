@@ -34,6 +34,7 @@ public class WiMicServer implements Runnable {
     private final String JOIN_FAIL = "WIMIC_JOIN_FAILURE";
     private final String SPEAK_MESSAGE = "WIMIC_SPEAK_REQ";
     private final String STOP_SPEAK_MESSAGE = "WIMIC_SPEAK_END";
+    private final String SPEAK_AUTH_FAILED = "WIMIC_SPEAK_AUTH_FAILED";
     private final String SPEAK_ACK = "WIMIC_SPEAK_ACK";
     private final String SPEAK_NACK = "WIMIC_SPEAK_NACK";
     private final String SPEAK_TIMEOUT = "WIMIC_SPEAK_TIMEOUT";
@@ -148,9 +149,16 @@ public class WiMicServer implements Runnable {
         } else if (message.contains(JOIN_MESSAGE)) {
             System.out.println("Join packet received from " + packet.getAddress());
             sendJoinACK(socket, packet);
-        } else if (message.equals(SPEAK_MESSAGE)) {
+
+        } else if (message.contains(SPEAK_MESSAGE)) {
             System.out.println("Speak message received");
-            sendSpeakACK(socket, packet);
+            String[] request = message.split(";");
+            if (request.length >= 2 && validatePin(request[1])) {
+                sendSpeakACK(socket, packet);   // ACK or NACK
+            } else {
+                sendMessage(socket, packet, SPEAK_AUTH_FAILED);
+            }
+
         } else if (message.equals(STOP_SPEAK_MESSAGE)) {
             System.out.println("Stop speak message received");
             isChannelAvailable = true;
