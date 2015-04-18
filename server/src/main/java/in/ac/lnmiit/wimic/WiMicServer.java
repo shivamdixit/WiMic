@@ -222,7 +222,7 @@ public class WiMicServer implements Runnable {
     }
 
     /**
-     * Check and send speak message acknowledgement
+     * Check and send speak message acknowledgment
      */
     private void sendSpeakACK(DatagramSocket socket, DatagramPacket packet) throws IOException {
         if (isChannelAvailable) {
