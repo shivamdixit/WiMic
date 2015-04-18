@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -299,8 +300,9 @@ public class MainActivity extends ActionBarActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                DatagramSocket socket = null;
                 try {
-                    DatagramSocket socket = new DatagramSocket();
+                    socket = new DatagramSocket();
                     sendMessage(
                             socket,
                             Config.JOIN_MESSAGE + ";" + pin,
@@ -315,17 +317,47 @@ public class MainActivity extends ActionBarActivity {
                             receiveBuffer.length
                     );
 
+                    socket.setSoTimeout(Config.RESPONSE_TIMEOUT);
                     socket.receive(packet);
                     handleResponse(packet, ipAddress, roomName);
 
                     dialog.dismiss();
                     socket.close();
+                } catch (SocketTimeoutException e) {
+                    // Do nothing
+                    showToast("Cannot reach server");
                 } catch (Exception e) {
                     // TODO
                     e.printStackTrace();
+                    showToast("Some error occurred");
+                } finally {
+                    dialog.dismiss();
+
+                    if (socket != null) {
+                        socket.close();
+                    }
                 }
             }
         }).start();
+    }
+
+    /**
+     * Show toast message on UI thread if search
+     * is already in progress
+     *
+     * @param message Message to show on Toast
+     */
+    private void showToast(final String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(
+                        MainActivity.this,
+                        message,
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        });
     }
 
     /**
@@ -372,16 +404,7 @@ public class MainActivity extends ActionBarActivity {
             MainActivity.this.startActivity(myIntent);
 
         } else if (message.equals(Config.JOIN_FAIL)) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(
-                            getApplicationContext(),
-                            "Invalid PIN",
-                            Toast.LENGTH_LONG
-                    ).show();
-                }
-            });
+            showToast("Invalid PIN");
         }
     }
 }

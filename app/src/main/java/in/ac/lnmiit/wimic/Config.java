@@ -1,6 +1,7 @@
 package in.ac.lnmiit.wimic;
 
 public class Config {
+    public final static int RESPONSE_TIMEOUT = 3 * 1000;    // In milliseconds
     public final static int MESSAGE_PORT = 9876;
     public final static int SPEAK_PORT = 9898;
     public final static String JOIN_MESSAGE = "WIMIC_JOIN_PASSWORD";
