@@ -1,4 +1,4 @@
 langugage: java
 jdk:
   - openjdk7
-script: ant test
+script: ant -buildfile server/build.xml test
