@@ -16,6 +16,7 @@ import android.widget.Toast;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 
 
 public class Speak extends ActionBarActivity {
@@ -170,18 +171,38 @@ public class Speak extends ActionBarActivity {
                             receiveBuffer,
                             receiveBuffer.length
                     );
+                    checkStreamSocket.setSoTimeout(Config.RESPONSE_TIMEOUT);
                     checkStreamSocket.receive(receivePacket);
                     final String message = new String(receivePacket.getData()).trim();
                     handleStreamResponse(message);
 
                     checkStreamSocket.close();
+                } catch (SocketTimeoutException e) {
+                    showToast("Cannot reach server");
                 } catch (Exception e) {
-                    // TODO
                     e.printStackTrace();
                 }
 
             }
         }).start();
+    }
+
+    /**
+     * Show toast message
+     *
+     * @param message Message to show on Toast
+     */
+    private void showToast(final String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(
+                        Speak.this,
+                        message,
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        });
     }
 
     /**
