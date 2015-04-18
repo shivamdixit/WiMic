@@ -1,3 +1,5 @@
+package in.ac.lnmiit.wimic;
+
 import java.io.IOException;
 import java.io.ByteArrayInputStream;
 import java.lang.System;
@@ -88,7 +90,7 @@ public class WiMicServer implements Runnable {
      * @param name Name of the room
      * @param pin PIN of the room
      */
-    WiMicServer(String name, int pin) {
+    public WiMicServer(String name, int pin) {
         // Ensure first alphabet is capital
         this.name = name.substring(0, 1).toUpperCase() + name.substring(1);
         this.pin = pin;
