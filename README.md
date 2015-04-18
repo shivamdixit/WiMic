@@ -8,3 +8,4 @@ Converts your android phone into microphone!
 * Nishant Middha
 * Ritesh Agrawal
 * Shivam Dixit
+* Prasham Gupta (Logo and button design)
