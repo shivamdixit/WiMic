@@ -167,6 +167,8 @@ public class Scanner extends AsyncTask<InetAddress, Room, List<Room>> {
     protected void onPostExecute(List<Room> rooms) {
         // TODO Add caching of rooms
         ((MainActivity) mainActivity).resetRefresh();   // Stops the refresh button animation
-
+        if (rooms.isEmpty()) {
+            showToast("No rooms found!");
+        }
     }
 }
