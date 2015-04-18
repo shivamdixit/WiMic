@@ -1,5 +1,6 @@
 package in.ac.lnmiit.wimic;
 
+import android.app.AlertDialog;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
@@ -417,7 +418,16 @@ public class Speak extends ActionBarActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_about) {
+            String message = getString(R.string.wimic_version) +
+                    "\n\n" +
+                    getString(R.string.contributors);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("About")
+                    .setCancelable(true)
+                    .setMessage(message)
+                    .create()
+                    .show();
             return true;
         } else if (id == android.R.id.home) {
             NavUtils.navigateUpFromSameTask(this);

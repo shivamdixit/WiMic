@@ -118,7 +118,16 @@ public class MainActivity extends ActionBarActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_about) {
+            String message = getString(R.string.wimic_version) +
+                    "\n\n" +
+                    getString(R.string.contributors);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("About")
+                    .setCancelable(true)
+                    .setMessage(message)
+                    .create()
+                    .show();
             return true;
         } else if (id == R.id.action_refresh) {
             checkWifi();
