@@ -358,8 +358,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
     /**
-     * Show toast message on UI thread if search
-     * is already in progress
+     * Show toast message on UI thread
      *
      * @param message Message to show on Toast
      */
