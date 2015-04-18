@@ -6,7 +6,9 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.ConnectivityManager;
 import android.net.DhcpInfo;
+import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.provider.Settings;
@@ -136,6 +138,9 @@ public class MainActivity extends ActionBarActivity {
         if (!wifi.isWifiEnabled()) {
             System.out.println("WiFI is disabled");
             showWifiPrompt();
+        } else if (!wifiConnected()) {
+            System.out.println("WiFi not connected");
+            showToast("Please connect to a network");
         } else {
             try {
                 System.out.println("WiFI is enabled");
@@ -144,6 +149,17 @@ public class MainActivity extends ActionBarActivity {
                 e.printStackTrace();
             }
         }
+    }
+
+    /**
+     * Checks if wifi is connected to a network or not
+     *
+     * @return true if connected else false
+     */
+    private boolean wifiConnected() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifiInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        return wifiInfo.isConnected();
     }
 
     /**
@@ -157,7 +173,7 @@ public class MainActivity extends ActionBarActivity {
             .setPositiveButton("Enable", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(final DialogInterface dialogInterface, final int i) {
-                    startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
+                    startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
                 }
             })
             .setNegativeButton("Quit", new DialogInterface.OnClickListener() {
