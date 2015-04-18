@@ -52,7 +52,7 @@ public class WiMicServer implements Runnable {
     private int pin;
 
     /**
-     * Channel availibity flag
+     * Channel availability flag
      */
     private boolean isChannelAvailable = true;
 
@@ -94,6 +94,34 @@ public class WiMicServer implements Runnable {
         // Ensure first alphabet is capital
         this.name = name.substring(0, 1).toUpperCase() + name.substring(1);
         this.pin = pin;
+    }
+
+    /**
+     * Sets the PIN
+     */
+    public void setPin(int pin) {
+        this.pin = pin;
+    }
+
+    /**
+     * Returns the server PIN
+     */
+    public int getPin() {
+        return this.pin;
+    }
+
+    /**
+     * Sets the name
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * Returns the server name
+     */
+    public String getName() {
+        return this.name;
     }
 
     /**
@@ -277,7 +305,7 @@ public class WiMicServer implements Runnable {
      * @param pin Given pin as String
      * @return true if valid, else false
      */
-    private boolean validatePin(String pin) {
+    public boolean validatePin(String pin) {
         String regex = "\\d+";
         int pinInt;
 

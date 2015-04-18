@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="wimic" basedir="." default="build">
+    <property environment="ENV"/>
+
+    <property name="src.dir" value="src/main/java/in/ac/lnmiit/wimic"/>
+    <property name="tests.dir" value="${src.dir}/test"/>
+    <property name="build.dir" value="build"/>
+    <property name="dependencies.dir" value="libs"/>
+    <property name="tests.report.dir" value="${build.dir}/tests"/>
+
+    <path id="junit.class.path">
+        <pathelement location="${dependencies.dir}/junit.jar"/>
+        <pathelement location="${dependencies.dir}/hamcrest-core-1.3.jar"/>
+        <pathelement location="${build.dir}"/>
+    </path>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <target name="build" depends="clean">
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${tests.report.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${build.dir}" debug="on" includeantruntime="false">
+            <classpath refid="junit.class.path"/>
+        </javac>
+    </target>
+
+    <target name="test" depends="build">
+        <junit fork="true" haltonfailure="yes">
+            <classpath refid="junit.class.path"/>
+            <batchtest todir="${tests.report.dir}">
+                <formatter type="brief" usefile="false"/>
+                <fileset dir="${src.dir}">
+                    <include name="**/*Test*.java"/>
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+</project>
