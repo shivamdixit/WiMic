@@ -1,4 +1,4 @@
 langugage: java
-install: ant deps
 jdk:
   - openjdk7
+script: ant test
