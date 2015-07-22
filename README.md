@@ -5,8 +5,8 @@ WiMic
 Converts your android phone into microphone!
 
 ####Contributors
+* Shivam Dixit
 * Hemant Jain
 * Nishant Middha
 * Ritesh Agrawal
-* Shivam Dixit
 * Prasham Gupta (Logo and button design)
