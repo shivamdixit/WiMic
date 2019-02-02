@@ -3,6 +3,7 @@
     <property environment="ENV"/>
 
     <property name="src.dir" value="src/main/java/in/ac/lnmiit/wimic"/>
+    <property name="package" value="in.ac.lnmiit.wimic"/>
     <property name="tests.dir" value="${src.dir}/test"/>
     <property name="build.dir" value="build"/>
     <property name="dependencies.dir" value="libs"/>
@@ -21,9 +22,23 @@
     <target name="build" depends="clean">
         <mkdir dir="${build.dir}"/>
         <mkdir dir="${tests.report.dir}"/>
-        <javac srcdir="${src.dir}" destdir="${build.dir}" debug="on" includeantruntime="false">
+        <mkdir dir="${build.dir}/classes"/>
+        <javac srcdir="${src.dir}" destdir="${build.dir}/classes" debug="on" includeantruntime="false">
             <classpath refid="junit.class.path"/>
         </javac>
+    </target>
+
+    <target name="jar" depends="build">
+        <mkdir dir="${build.dir}/jar"/>
+        <jar destfile="${build.dir}/jar/WiMicServer.jar" basedir="${build.dir}/classes">
+            <manifest>
+                <attribute name="Main-Class" value="${package}.WiMicServer"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="run" depends="jar">
+        <java jar="${build.dir}/jar/WiMicServer.jar" fork="true"/>
     </target>
 
     <target name="test" depends="build">
